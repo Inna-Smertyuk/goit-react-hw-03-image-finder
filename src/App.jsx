@@ -18,7 +18,7 @@ class App extends Component {
     isModalOpen: false,
   };
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(_, prevState) {
     if (
       prevState.currentPage !== this.state.currentPage ||
       !this.state.img.length
@@ -26,12 +26,15 @@ class App extends Component {
       api(this.state.searchImage, this.state.currentPage)
         .then((img) => {
           this.setState((prevState) => {
-            return { img: [...prevState.img, ...img.hits] };
+            return {
+              img: [...prevState.img, ...img.hits],
+            };
           });
         })
         .catch((error) => this.setState({ error }))
         .finally(() => this.setState({ loading: false }));
     }
+
     this.handleScroll();
   }
   handleScroll = () => {
@@ -58,10 +61,15 @@ class App extends Component {
   };
 
   loadMore = () => {
-    this.setState(({ currentPage }) => ({
-      currentPage: currentPage + 1,
-      loading: true,
-    }));
+    this.setState((prevState) => {
+      if (this.state.img.length % 12 !== 0) {
+        return { loading: false };
+      } else
+        return {
+          currentPage: prevState.currentPage + 1,
+          loading: true,
+        };
+    });
   };
 
   openModal = (e) => {
@@ -76,7 +84,8 @@ class App extends Component {
   };
 
   render() {
-    const { img, loading, currentPage, isModalOpen, modalImg } = this.state;
+    const { img, loading, isModalOpen, modalImg } = this.state;
+    const showBtn = img.length > 0 && img.length >= 12;
     return (
       <>
         <Searchbar onSubmit={this.imageSubmit} />
@@ -85,7 +94,7 @@ class App extends Component {
           <Modal modalImg={modalImg} closeModal={this.handleCloseModal} />
         )}
         {loading && <Loader />}
-        {currentPage && <Button onClick={this.loadMore} />}
+        {showBtn && <Button onClick={this.loadMore} />}
       </>
     );
   }
